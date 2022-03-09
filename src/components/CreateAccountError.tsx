@@ -23,7 +23,7 @@ export const CreateAccountError: FC = () => {
       })
     );
 
-    const signature  = await sendTransaction(transaction, connection, {signers: [tempTokenAccount]});
+    const signature  = await sendTransaction(transaction, connection);
     let txid = await connection.confirmTransaction(signature);
     console.log(txid);
   }, [publicKey, connection, sendTransaction]);
