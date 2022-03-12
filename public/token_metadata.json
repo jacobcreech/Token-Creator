@@ -2,5 +2,5 @@
   "name": "A test token",
   "symbol": "TEST",
   "description": "Fully for testing purposes only",
-  "image": "https://www.circle.com/hs-fs/hubfs/sundaes/USDC.png?width=540&height=540&name=USDC.png"
+  "image": "https://token-creator-lac.vercel.app/token_image.png"
 }
