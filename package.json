@@ -10,7 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@heroicons/react": "^1.0.5",
+    "@heroicons/react": "^1.0.6",
     "@solana/spl-token": "^0.2.0",
     "@solana/wallet-adapter-base": "^0.9.3",
     "@solana/wallet-adapter-react": "^0.15.3",
