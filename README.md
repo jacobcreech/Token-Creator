@@ -1,127 +1,170 @@
+# Solana Token Creator
 
-# Solana dApp Scaffold Next
+## Creating a Solana Token
 
-The Solana dApp Scaffold repos are meant to house good starting scaffolds for ecosystem developers to get up and running quickly with a front end client UI that integrates several common features found in dApps with some basic usage examples. Wallet Integration. State management. Components examples. Notificaitons. Setup recommendations.
+[Demo](https://token-creator-lac.vercel.app/)
 
-Responsive                     |  Desktop
-:-------------------------:|:-------------------------:
-![](scaffold-mobile.png)  |  ![](scaffold-desktop.png)
+You can use the token creator application to create a token and
+sent it to your wallet. This application is purely for demonstration
+purposes.
 
-## Getting Started
+## Full Breakdown
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Creating a Solana token requires the following steps:
 
-The responsive version for wallets and wallet adapter may not function or work as expected for mobile based on plugin and wallet compatibility. For more code examples and implementations please visit the [Solana Cookbook](https://solanacookbook.com/)
+1. Creating a new Mint account
+2. Creating an associated token account
+3. Minting an amount of the token to the associated token account
+4. Adding the token metadata to the mint account
 
-## Installation
+### Creating a new mint account
 
-```bash
-npm install
-# or
-yarn install
+Mint accounts hold information about the token such as how 
+many decimals the token has and who can mint new tokens.
+
+You can create a custom keypair for the mint account by
+[grinding a keypair](https://solanacookbook.com/references/keypairs-and-wallets.html#how-to-generate-a-vanity-address). 
+This keypair's public key will be used to have a vanity address 
+for the token. Create a new mint account with that key
+by first initializing the account and space for the mint 
+account, then calling `createInitializeMintInstruction`. 
+These instructions can be added and executed in the same 
+transaction.
+
+```typescript
+const Transaction = new Transaction().add(
+  SystemProgram.createAccount({
+      fromPubkey: publicKey,
+      newAccountPubkey: mintKeypair.publicKey,
+      space: MINT_SIZE,
+      lamports: lamports,
+      programId: TOKEN_PROGRAM_ID,
+  }),
+  createInitializeMintInstruction(
+    mintKeypair.publicKey, 
+    form.decimals, 
+    publicKey, 
+    publicKey, 
+    TOKEN_PROGRAM_ID)
+);
 ```
 
-## Build and Run
+### Creating an Associated Token Account
 
-Next, run the development server:
+Associated Token Accounts are derived from the mint account's
+address. They hold the token's balance and can be used to transfer
+tokens from one wallet to another.
 
-```bash
-npm run dev
-# or
-yarn dev
+Normally when getting ATA's for a user, you would use
+`getOrCreateAssociatedTokenAccount`. This function will create the
+ATA if it doesn't exist.
+
+In our case, we created a brand new mint account and know the ATA will
+not exist. So we can make a transaction with the 
+`createAssociatedTokenAccountInstruction`, getting the derived address
+with `getAssociatedTokenAddress`.
+
+```typescript
+const Transaction = new Transaction().add(
+  createAssociatedTokenAccountInstruction(
+    publicKey,
+    tokenATA,
+    publicKey,
+    mintKeypair.publicKey,
+  )
+);
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Minting Tokens
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+When you mint tokens, you increase the overall supply of the token.
+You can mint tokens by using `createMintToInstruction` in a transaction.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Features
-
-Each Scaffold will contain at least the following features:
-
-```
-Wallet Integration with Auto Connec / Refresh
-
-State Management
-
-Components: One or more components demonstrating state management
-
-Web3 Js: Examples of one or more uses of web3 js including a transaction with a connection provider
-
-Sample navigation and page changing to demonstate state
-
-Clean Simple Styling 
-
-Notifications (optional): Example of using a notification system
-
+```typescript
+const Transaction = new Transaction().add(
+  createMintToInstruction(
+    mintKeypair.publicKey,
+    tokenATA,
+    publicKey,
+    form.amount
+  )
+);
 ```
 
-A Solana Components Repo will be released in the near future to house a common components library.
+### Adding the Token Metadata
 
+When you create a token, you want to make sure that the token shows up
+in user's wallets with a name, ticker, and image. Solana uses the [Token
+Metadata Program from Metaplex](https://docs.metaplex.com/token-metadata/specification#token-standards) to achieve this.
 
-### Structure
+The metadata account address is derived from the mint account. The metadata
+field requires a JSON file to be populated with at least the following:
 
-The scaffold project structure may vary based on the front end framework being utilized. The below is an example structure for the Next js Scaffold.
- 
-```
-├── public : publically hosted files
-├── src : primary code folders and files 
-│   ├── components : should house anything considered a resuable UI component
-│   ├── contexts` : any context considered reusable and useuful to many compoennts that can be passed down through a component tree
-│   ├── hooks` : any functions that let you 'hook' into react state or lifecycle features from function components
-│   ├── models` : any data structure that may be reused throughout the project
-│   ├── pages` : the pages that host meta data and the intended `View` for the page
-│   ├── stores` : stores used in state management
-│   ├── styles` : contain any global and reusable styles
-│   ├── utils` : any other functionality considered reusable code that can be referenced
-│   ├── views` : contains the actual views of the project that include the main content and components within
-style, package, configuration, and other project files
-
+```json
+{
+  "name": "Coin name",
+  "symbol": "Symbol",
+  "image": "Image link"
+}
 ```
 
-## Contributing
+You can find an example [here](https://token-creator-lac.vercel.app/token_metadata.json).
 
-Anyone is welcome to create an issue to build, discuss or request a new feature or update to the existing code base. Please keep in mind the following when submitting an issue. We consider merging high value features that may be utilized by the majority of scaffold users. If this is not a common feature or fix, consider adding it to the component library or cookbook. Please refer to the project's architecture and style when contributing. 
+To attach the metadata to the mint account, you can use `CreateMetadataV2`.
 
-If submitting a feature, please reference the project structure shown above and try to follow the overall architecture and style presented in the existing scaffold.
+```typescript
+const createMetadataTransaction = new CreateMetadataV2(
+  { feePayer: publicKey },
+  {
+    metadata: metadataPDA,
+    metadataData: tokenMetadata,
+    updateAuthority: publicKey,
+    mint: mintKeypair.publicKey,
+    mintAuthority: publicKey,
+  },
+)
+```
 
-### Committing
+`tokenMetadata` is the JSON file you want to attach to the mint account.
+Some people use Arweave to host their metadata. You can also use any other
+online storage solution.
 
-To choose a task or make your own, do the following:
+### All Done!
 
-1. [Add an issue](https://github.com/solana-dev-adv/solana-dapp-next/issues/new) for the task and assign it to yourself or comment on the issue
-2. Make a draft PR referencing the issue.
+Following all of the steps above, you should now have a token minted.
 
-The general flow for making a contribution:
+The best part is that you can actually add all of these instructions
+to a single transaction:
 
-1. Fork the repo on GitHub
-2. Clone the project to your own machine
-3. Commit changes to your own branch
-4. Push your work back up to your fork
-5. Submit a Pull request so that we can review your changes
+```typescript
+const createMintTransaction = new Transaction().add(
+  SystemProgram.createAccount({
+      fromPubkey: publicKey,
+      newAccountPubkey: mintKeypair.publicKey,
+      space: MINT_SIZE,
+      lamports: lamports,
+      programId: TOKEN_PROGRAM_ID,
+  }),
+  createInitializeMintInstruction(
+    mintKeypair.publicKey, 
+    form.decimals, 
+    publicKey, 
+    publicKey, 
+    TOKEN_PROGRAM_ID),
+  createAssociatedTokenAccountInstruction(
+    publicKey,
+    tokenATA,
+    publicKey,
+    mintKeypair.publicKey,
+  ),
+  createMintToInstruction(
+    mintKeypair.publicKey,
+    tokenATA,
+    publicKey,
+    form.amount
+  )
+);
+```
+You can find the full source code for this application [here](https://github.com/jacobcreech/Token-Creator/blob/master/src/components/CreateToken.tsx).
 
-**NOTE**: Be sure to merge the latest from "upstream" before making a 
-pull request!
-
-You can find tasks on the [project board](https://github.com/solana-dev-adv/solana-dapp-next/projects/1) 
-or create an issue and assign it to yourself.
-
-
-## Learn More Next Js
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Enjoy your new token!
