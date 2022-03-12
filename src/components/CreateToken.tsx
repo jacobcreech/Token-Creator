@@ -66,9 +66,9 @@ export const CreateToken: FC = () => {
           mintAuthority: publicKey,
         },
       )
-      await sendTransaction(createMintTransaction, connection, {signers: [mintKeypair]});
+      const mintSignature = await sendTransaction(createMintTransaction, connection, {signers: [mintKeypair]});
+      await connection.confirmTransaction(mintSignature);
       await sendTransaction(createMetadataTransaction, connection);
-      console.log(mintKeypair.publicKey.toBase58());
   }, [publicKey, connection, sendTransaction]);
 
   return (
