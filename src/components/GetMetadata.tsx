@@ -21,6 +21,7 @@ export const GetMetadata: FC = () => {
       setTokenMetadata({ tokenMetadata, ...metadata.data });
       setLogo(image);
       setLoaded(true);
+      setTokenAddress('')
     },
     [tokenAddress]
   );
@@ -59,7 +60,7 @@ export const GetMetadata: FC = () => {
                           logo
                         </dt>
                         <dd className='mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2'>
-                          <img src={logo} alt='token' className='w-1/4 h-full display-inline-block object-center object-cover lg:w-1/4 lg:h-full'/>
+                          <img src={logo} alt='token' className='w-1/4 h-full inline-block object-center object-cover lg:w-1/4 lg:h-full'/>
                         </dd>
                       </div>
                       <div className='bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'>
