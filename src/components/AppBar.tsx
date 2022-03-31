@@ -44,6 +44,8 @@ export const AppBar: FC = props => {
 
         {/* Wallet & Settings */}
         <div className="navbar-end">
+          <Link href="/"><a className="mr-8">Token Creator</a></Link>
+          <Link href="/metadata"><a className="mr-4">Token Metadata</a></Link>
           <div className="dropdown">
             <div tabIndex={0} className="btn btn-square btn-ghost text-right">
               <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
