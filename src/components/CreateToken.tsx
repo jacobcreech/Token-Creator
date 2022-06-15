@@ -52,7 +52,7 @@ export const CreateToken: FC = () => {
           mintKeypair.publicKey,
           tokenATA,
           publicKey,
-          form.amount
+          form.amount * Math.pow(10, form.decimals),
         )
       );
 

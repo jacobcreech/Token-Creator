@@ -1,4 +1,4 @@
-import { FC, useState, Fragment } from 'react';
+import { FC, useState, Fragment, useEffect } from 'react';
 import { Listbox, Transition } from '@headlessui/react'
 import { CheckIcon, SelectorIcon } from '@heroicons/react/solid'
 import { WebBundlr } from '@bundlr-network/client';
@@ -8,9 +8,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { notify } from '../utils/notifications';
 
 const bundlers = [
-  { id: 1, name: 'https://node1.bundlr.network' },
-  { id: 2, name: 'https://node2.bundlr.network'},
-  { id: 3, name: 'https://devnet.bundlr.network'},
+  { id: 1, network: 'mainnet-beta', name: 'https://node1.bundlr.network' },
+  { id: 2, network: 'devnet', name: 'https://devnet.bundlr.network'},
 ]
 
 const classNames = (...classes) => {
@@ -30,15 +29,22 @@ export const UploadMetadata: FC = ({}) => {
   const [metadata, setMetadata] = useState(null);
   const [metadataUrl, setMetadataUrl] = useState(null);
 
-  const initializeProvider = async () => {
-    if (wallet) {
-      await wallet.connect();
-      const provider = wallet.wallet.adapter;
-      await provider.connect();
-      setProvider(provider);
-      notify({ type: 'success', message: `Provider: ${provider.name}` });
+  useEffect(() => {
+    if (wallet && wallet.connected) {
+      async function connectProvider() {
+        console.log(wallet);
+        await wallet.connect();
+        const provider = wallet.wallet.adapter;
+        await provider.connect();
+        setProvider(provider);
+      }
+      connectProvider();
     }
-  };
+  });
+
+  useEffect(() => {
+
+  });
 
   const initializeBundlr = async () => {
     // initialise a bundlr client
@@ -81,7 +87,7 @@ export const UploadMetadata: FC = ({}) => {
     }
     notify({
       type: 'success',
-      message: `Connected to https://devnet.bundlr.network`,
+      message: `Connected to ${selected.network}`,
     });
     setAddress(bundler?.address);
     setBundlr(bundler);
@@ -164,37 +170,6 @@ export const UploadMetadata: FC = ({}) => {
     <div className='bg-white shadow overflow-hidden sm:rounded-lg'>
       <div className='border-t border-gray-200 px-4 py-5 sm:p-0'>
         <div className='py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'>
-          <div className='pt-4 sm:pt-5 md:col-span-1'>
-            <div className='px-4 sm:px-0'>
-              <h3 className='text-lg font-medium leading-6 text-gray-900'>
-                Wallet Provider
-              </h3>
-              <p className='mt-1 text-sm text-gray-600'>
-                This is the wallet that will be used to sign your transaction.
-              </p>
-            </div>
-          </div>
-          <div className='py-4 sm:py-5 mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-1'>
-            <div className='px-4 py-5 bg-white space-y-6 sm:p-6'>
-              {provider && provider.name}
-            </div>
-          </div>
-          <div className='mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-1'>
-            <div className='px-4 py-5 bg-white space-y-6 sm:p-6'>
-              <button
-                className='items-center px-3 py-2 text-xs btn animate-pulse bg-gradient-to-r from-[#9945FF] to-[#14F195] hover:from-pink-500 hover:to-yellow-500 ...'
-                onClick={async () => await initializeProvider()}>
-                Connect Wallet Provider
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className='hidden sm:block' aria-hidden='true'>
-          <div className='py-5'>
-            <div className='border-t border-gray-200' />
-          </div>
-        </div>
-        <div className='py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6'>
           <div className='md:col-span-1'>
             <div className='px-4 sm:px-0'>
               <h3 className='text-lg font-medium leading-6 text-gray-900'>
@@ -213,7 +188,7 @@ export const UploadMetadata: FC = ({}) => {
                   <>
                     <div className="mt-1 relative">
                       <Listbox.Button className="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <span className="block truncate">{!selected ? 'Select a bundler' : selected.name}</span>
+                        <span className="block truncate">{!selected ? 'Select Network' : selected.network}</span>
                         <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                           <SelectorIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
                         </span>
@@ -240,7 +215,7 @@ export const UploadMetadata: FC = ({}) => {
                               {({ selected, active }) => (
                                 <>
                                   <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>
-                                    {bundler.name}
+                                    {bundler.network}
                                   </span>
 
                                   {selected ? (
@@ -270,7 +245,7 @@ export const UploadMetadata: FC = ({}) => {
               <button
                 className='items-center px-3 py-2 text-xs btn animate-pulse bg-gradient-to-r from-[#9945FF] to-[#14F195] hover:from-pink-500 hover:to-yellow-500 ...'
                 onClick={async () => await initializeBundlr()}>
-                Connect Bundler
+                Connect
               </button>
             </div>
           </div>
