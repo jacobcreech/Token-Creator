@@ -13,6 +13,7 @@ import pkg from '../../../package.json';
 // Store
 import useUserSOLBalanceStore from '../../stores/useUserSOLBalanceStore';
 import { CreateToken } from 'components/CreateToken';
+import { UpdateMetadata } from 'components/UpdateMetadata';
 
 export const HomeView: FC = ({ }) => {
   const wallet = useWallet();

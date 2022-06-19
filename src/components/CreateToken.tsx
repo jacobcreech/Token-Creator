@@ -65,7 +65,7 @@ export const CreateToken: FC = () => {
           { createMetadataAccountArgsV2: 
             { 
               data: tokenMetadata, 
-              isMutable: false 
+              isMutable: true 
             } 
           }
         )
