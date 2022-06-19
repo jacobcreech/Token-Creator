@@ -1,14 +1,11 @@
 import { FC, useCallback, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Keypair, SystemProgram, Transaction, PublicKey } from '@solana/web3.js';
-import { MINT_SIZE, TOKEN_PROGRAM_ID, createInitializeMintInstruction, getMinimumBalanceForRentExemptMint, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createMintToInstruction } from '@solana/spl-token';
+import { Transaction, PublicKey } from '@solana/web3.js';
 import {
   DataV2,
-  createCreateMetadataAccountV2Instruction,
   createUpdateMetadataAccountV2Instruction,
 } from "@metaplex-foundation/mpl-token-metadata";
 import { findMetadataPda } from '@metaplex-foundation/js';
-import { updateAuthority } from '@metaplex-foundation/js/dist/types/plugins/candyMachineModule/Client.update';
 
 export const UpdateMetadata: FC = () => {
   const { connection } = useConnection();
@@ -17,8 +14,7 @@ export const UpdateMetadata: FC = () => {
   const [tokenName, setTokenName] = useState('')
   const [symbol, setSymbol] = useState('')
   const [metadata, setMetadata] = useState('')
-  const [decimals, setDecimals] = useState('')
-  const [amount, setAmount] = useState('')
+
 
   const onClick = useCallback(async (form) => {
       const mint = new PublicKey(form.tokenMint)
