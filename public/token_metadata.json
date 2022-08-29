@@ -1,6 +1,6 @@
 {
-  "name": "A test token",
-  "symbol": "TEST",
-  "description": "Fully for testing purposes only",
-  "image": "https://token-creator-lac.vercel.app/token_image.png"
+  "name": "Thakur Token",
+  "symbol": "SINGH",
+  "description": "This token is created by Saurabh Singh Tomar",
+  "image": "https://gateway.pinata.cloud/ipfs/QmZzvFgB7NMbK6Cvf5STHqUjrHzkRpxWWKojwGxJu1BUor"
 }
