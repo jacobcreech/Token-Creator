@@ -1,77 +1,99 @@
-import { FC, useCallback, useState } from 'react';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
-import { MINT_SIZE, TOKEN_PROGRAM_ID, createInitializeMintInstruction, getMinimumBalanceForRentExemptMint, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createMintToInstruction } from '@solana/spl-token';
-import { DataV2, createCreateMetadataAccountV2Instruction } from '@metaplex-foundation/mpl-token-metadata';
-import { findMetadataPda } from '@metaplex-foundation/js';
+import { FC, useCallback, useState } from "react"
+import { useConnection, useWallet } from "@solana/wallet-adapter-react"
+import { Keypair, SystemProgram, Transaction } from "@solana/web3.js"
+import {
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+  createInitializeMintInstruction,
+  getMinimumBalanceForRentExemptMint,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+} from "@solana/spl-token"
+import {
+  DataV2,
+  createCreateMetadataAccountV3Instruction,
+} from "@metaplex-foundation/mpl-token-metadata"
+import { findMetadataPda } from "@metaplex-foundation/js"
 
 export const CreateToken: FC = () => {
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
-  const [tokenName, setTokenName] = useState('')
-  const [symbol, setSymbol] = useState('')
-  const [metadata, setMetadata] = useState('')
-  const [amount, setAmount] = useState('')
-  const [decimals, setDecimals] = useState('')
+  const { connection } = useConnection()
+  const { publicKey, sendTransaction } = useWallet()
+  const [tokenName, setTokenName] = useState("")
+  const [symbol, setSymbol] = useState("")
+  const [metadata, setMetadata] = useState("")
+  const [amount, setAmount] = useState("")
+  const [decimals, setDecimals] = useState("")
 
-  const onClick = useCallback(async (form) => {
-      const lamports = await getMinimumBalanceForRentExemptMint(connection);
-      const mintKeypair = Keypair.generate();
-      const metadataPDA = await findMetadataPda(mintKeypair.publicKey);
-      const tokenATA = await getAssociatedTokenAddress(mintKeypair.publicKey, publicKey);
+  const onClick = useCallback(
+    async (form) => {
+      const lamports = await getMinimumBalanceForRentExemptMint(connection)
+      const mintKeypair = Keypair.generate()
+      const metadataPDA = await findMetadataPda(mintKeypair.publicKey)
+      const tokenATA = await getAssociatedTokenAddress(
+        mintKeypair.publicKey,
+        publicKey
+      )
       const tokenMetadata = {
-        name: form.tokenName, 
+        name: form.tokenName,
         symbol: form.symbol,
         uri: form.metadata,
         sellerFeeBasisPoints: 0,
         creators: null,
         collection: null,
-        uses: null
-      } as DataV2;
+        uses: null,
+      } as DataV2
 
       const createNewTokenTransaction = new Transaction().add(
         SystemProgram.createAccount({
-            fromPubkey: publicKey,
-            newAccountPubkey: mintKeypair.publicKey,
-            space: MINT_SIZE,
-            lamports: lamports,
-            programId: TOKEN_PROGRAM_ID,
+          fromPubkey: publicKey,
+          newAccountPubkey: mintKeypair.publicKey,
+          space: MINT_SIZE,
+          lamports: lamports,
+          programId: TOKEN_PROGRAM_ID,
         }),
         createInitializeMintInstruction(
-          mintKeypair.publicKey, 
-          form.decimals, 
-          publicKey, 
-          publicKey, 
-          TOKEN_PROGRAM_ID),
+          mintKeypair.publicKey,
+          form.decimals,
+          publicKey,
+          publicKey,
+          TOKEN_PROGRAM_ID
+        ),
         createAssociatedTokenAccountInstruction(
           publicKey,
           tokenATA,
           publicKey,
-          mintKeypair.publicKey,
+          mintKeypair.publicKey
         ),
         createMintToInstruction(
           mintKeypair.publicKey,
           tokenATA,
           publicKey,
-          form.amount * Math.pow(10, form.decimals),
+          form.amount * Math.pow(10, form.decimals)
         ),
-        createCreateMetadataAccountV2Instruction({
+        createCreateMetadataAccountV3Instruction(
+          {
             metadata: metadataPDA,
             mint: mintKeypair.publicKey,
             mintAuthority: publicKey,
             payer: publicKey,
             updateAuthority: publicKey,
           },
-          { createMetadataAccountArgsV2: 
-            { 
-              data: tokenMetadata, 
-              isMutable: true 
-            } 
+          {
+            createMetadataAccountArgsV3: {
+              data: tokenMetadata,
+              isMutable: true,
+              collectionDetails: null,
+            },
           }
         )
-      );
-      await sendTransaction(createNewTokenTransaction, connection, {signers: [mintKeypair]});
-  }, [publicKey, connection, sendTransaction]);
+      )
+      await sendTransaction(createNewTokenTransaction, connection, {
+        signers: [mintKeypair],
+      })
+    },
+    [publicKey, connection, sendTransaction]
+  )
 
   return (
     <div className="my-6">
@@ -105,11 +127,20 @@ export const CreateToken: FC = () => {
         placeholder="Decimals"
         onChange={(e) => setDecimals(e.target.value)}
       />
-      
+
       <button
         className="px-8 m-2 btn animate-pulse bg-gradient-to-r from-[#9945FF] to-[#14F195] hover:from-pink-500 hover:to-yellow-500 ..."
-        onClick={() => onClick({decimals: Number(decimals), amount: Number(amount), metadata: metadata, symbol: symbol, tokenName: tokenName})}>
-          <span>Create Token</span>
+        onClick={() =>
+          onClick({
+            decimals: Number(decimals),
+            amount: Number(amount),
+            metadata: metadata,
+            symbol: symbol,
+            tokenName: tokenName,
+          })
+        }
+      >
+        <span>Create Token</span>
       </button>
     </div>
   )
