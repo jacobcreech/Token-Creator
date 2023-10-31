@@ -4,8 +4,8 @@ import { Transaction, PublicKey } from '@solana/web3.js';
 import {
   DataV2,
   createUpdateMetadataAccountV2Instruction,
+  PROGRAM_ID
 } from "@metaplex-foundation/mpl-token-metadata";
-import { findMetadataPda } from '@metaplex-foundation/js';
 
 export const UpdateMetadata: FC = () => {
   const { connection } = useConnection();
@@ -20,7 +20,15 @@ export const UpdateMetadata: FC = () => {
       const mint = new PublicKey(form.tokenMint)
     console.log(mint.toString())
     console.log(form.tokenMint)
-      const metadataPDA = await findMetadataPda(mint);
+      const metadataPDA = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("metadata"),
+          PROGRAM_ID.toBuffer(),
+          mint.toBuffer(),
+        ],
+        PROGRAM_ID,
+      )[0]
+    
       const tokenMetadata = {
         name: form.tokenName, 
         symbol: form.symbol,

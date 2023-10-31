@@ -1,9 +1,7 @@
 import { FC, useState, useCallback } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import { findMetadataPda } from '@metaplex-foundation/js';
-
+import { Metadata, PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
 
 export const GetMetadata: FC = () => {
   const { connection } = useConnection();
@@ -14,8 +12,15 @@ export const GetMetadata: FC = () => {
 
   const getMetadata = useCallback(
     async (form) => {
-      const tokenMint = form.tokenAddress;
-      const metadataPDA =  await findMetadataPda(new PublicKey(tokenMint));
+      const tokenMint = new PublicKey(form.tokenAddress);
+      const metadataPDA = PublicKey.findProgramAddressSync(
+				[
+					Buffer.from("metadata"),
+					PROGRAM_ID.toBuffer(),
+					tokenMint.toBuffer(),
+				],
+				PROGRAM_ID,
+			)[0]
       console.log(metadataPDA.toBase58());
       const metadataAccount = await connection.getAccountInfo(metadataPDA);
       console.log(metadataAccount);
