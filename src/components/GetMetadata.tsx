@@ -88,7 +88,7 @@ export const GetMetadata: FC = () => {
                         uri
                       </dt>
                       <dd className='mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2'>
-                        <a href={tokenMetadata.uri} target='_blank'>{tokenMetadata.uri}</a>
+                        <a href={tokenMetadata.uri} target='_blank' rel="noreferrer">{tokenMetadata.uri}</a>
                       </dd>
                     </div>
                   </>

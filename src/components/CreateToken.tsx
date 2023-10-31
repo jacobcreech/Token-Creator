@@ -1,9 +1,8 @@
 import { FC, useCallback, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Keypair, SystemProgram, Transaction } from '@solana/web3.js';
+import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import { MINT_SIZE, TOKEN_PROGRAM_ID, createInitializeMintInstruction, getMinimumBalanceForRentExemptMint, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createMintToInstruction } from '@solana/spl-token';
-import { DataV2, createCreateMetadataAccountV2Instruction } from '@metaplex-foundation/mpl-token-metadata';
-import { findMetadataPda } from '@metaplex-foundation/js';
+import { createCreateMetadataAccountV3Instruction, PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
 
 export const CreateToken: FC = () => {
   const { connection } = useConnection();
@@ -17,17 +16,39 @@ export const CreateToken: FC = () => {
   const onClick = useCallback(async (form) => {
       const lamports = await getMinimumBalanceForRentExemptMint(connection);
       const mintKeypair = Keypair.generate();
-      const metadataPDA = await findMetadataPda(mintKeypair.publicKey);
       const tokenATA = await getAssociatedTokenAddress(mintKeypair.publicKey, publicKey);
-      const tokenMetadata = {
-        name: form.tokenName, 
-        symbol: form.symbol,
-        uri: form.metadata,
-        sellerFeeBasisPoints: 0,
-        creators: null,
-        collection: null,
-        uses: null
-      } as DataV2;
+
+      const createMetadataInstruction = createCreateMetadataAccountV3Instruction(
+        {
+          metadata: PublicKey.findProgramAddressSync(
+            [
+              Buffer.from("metadata"),
+              PROGRAM_ID.toBuffer(),
+              mintKeypair.publicKey.toBuffer(),
+            ],
+            PROGRAM_ID,
+          )[0],
+          mint: mintKeypair.publicKey,
+          mintAuthority: publicKey,
+          payer: publicKey,
+          updateAuthority: publicKey,
+        },
+        {
+          createMetadataAccountArgsV3: {
+            data: {
+              name: form.tokenName,
+              symbol: form.symbol,
+              uri: form.metadata,
+              creators: null,
+              sellerFeeBasisPoints: 0,
+              uses: null,
+              collection: null,
+            },
+            isMutable: false,
+            collectionDetails: null,
+          },
+        },
+      );
 
       const createNewTokenTransaction = new Transaction().add(
         SystemProgram.createAccount({
@@ -55,20 +76,7 @@ export const CreateToken: FC = () => {
           publicKey,
           form.amount * Math.pow(10, form.decimals),
         ),
-        createCreateMetadataAccountV2Instruction({
-            metadata: metadataPDA,
-            mint: mintKeypair.publicKey,
-            mintAuthority: publicKey,
-            payer: publicKey,
-            updateAuthority: publicKey,
-          },
-          { createMetadataAccountArgsV2: 
-            { 
-              data: tokenMetadata, 
-              isMutable: true 
-            } 
-          }
-        )
+        createMetadataInstruction
       );
       await sendTransaction(createNewTokenTransaction, connection, {signers: [mintKeypair]});
   }, [publicKey, connection, sendTransaction]);
